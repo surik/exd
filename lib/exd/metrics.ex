@@ -74,8 +74,12 @@ defmodule Exd.Metrics do
   def count_objects(api) do
     model = api.__exd_api__(:model)
     repo = api.__exd_api__(:repo)
-    value = repo.one(from u in model, select: count(u.id))
-    [value: value]
+    try do
+      value = repo.one(from u in model, select: count(u.id))
+      [value: value]
+    catch
+      _, _ -> :erlang.error(:db_error)
+    end
   end
 
   defp create_request_metrics(api) do
