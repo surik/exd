@@ -17,7 +17,7 @@ defmodule ExdHelloTest do
     end
     for api <- [City.Api, Weather.Api], do: Hello.bind('zmq-tcp://127.0.0.1:10900', api)
     Hello.bind('zmq-tcp://127.0.0.1:10900', Exd.Api.Tag, %{repo: EctoIt.Repo})
-    Hello.Client.start({:local, __MODULE__}, 'zmq-tcp://127.0.0.1:10900', [], [], [])
+    Hello.Client.start({:local, __MODULE__}, 'zmq-tcp://127.0.0.1:10900', [], [decoder: Exd.Plugin.Hello.Poison], [])
     on_exit fn() ->
       :application.stop(:hello)
       :application.stop(:ecto_it)
@@ -28,7 +28,7 @@ defmodule ExdHelloTest do
   test "hello client" do
     # create
     assert {:ok, %{"id" => id}} = call("post", "city", %{"name" => "Berlin"})
-    assert {:ok, %{"id" => _}} = call("post", "city", ["country": "Germany", "name": "Hamburg"])
+    assert {:ok, %{"id" => _}} = call("post", "city", %{"country": "Germany", "name": "Hamburg"})
     assert {:ok, %{"id" => nid}} = call("post", "city", %{"country" => "Russia", "name" => "Novosibirsk"})
     assert {:ok, %{"id" => _}} = call("post", "city", %{"country" => "Russia", "name" => "Moscow"})
     assert {:ok, %{"id" => _}} = call("post", "city", %{"country" => "Russia", "name" => "Omsk"})
@@ -37,8 +37,8 @@ defmodule ExdHelloTest do
     assert {:ok, %{"id" => _}} = call("post", "weather", %{"name" => "Weather1", "city_id" => nid, "temp_lo" => -30})
 
     # get
-    assert {:ok, %{"country" => :null, "name" => "Berlin"}} = call("get", "exd/city", %{"name" => "Berlin"})
-    assert {:ok, %{"country" => :null, "weather" => [%{"temp_hi" => :null, "temp_lo" => 15}]}}
+    assert {:ok, %{"country" => nil, "name" => "Berlin"}} = call("get", "exd/city", %{"name" => "Berlin"})
+    assert {:ok, %{"country" => nil, "weather" => [%{"temp_hi" => nil, "temp_lo" => 15}]}}
            = call("get", "exd/city", %{"name" => "Berlin", "load" => ["weather"]})
 
     # count
@@ -65,7 +65,7 @@ defmodule ExdHelloTest do
     assert {:ok, [%{"name" => "Berlin"}]} = call("get", "exd/city", %{"where" => "like(name, \"berlin\")"})
 
     # distinct
-    assert {:ok, [%{"country" => :null},
+    assert {:ok, [%{"country" => nil},
                   %{"country" => "Germany"},
                   %{"country" => "Russia"},
                   %{"country" => "UK"}]} = call("get", "exd/city", %{"select" => "country", "distinct" => true})
@@ -103,8 +103,8 @@ defmodule ExdHelloTest do
     # delete
     assert {:ok, %{"id" => wid}} = call("delete", "exd/weather", %{"id" => wid})
     assert {:ok, %{"id" => id}} = call("delete", "exd/city", %{"id" => id})
-    assert {:ok, :null} = call("get", "exd/weather", %{"id" => wid})
-    assert {:ok, :null} = call("get", "exd/city", %{"id" => id})
+    assert {:ok, nil} = call("get", "exd/weather", %{"id" => wid})
+    assert {:ok, nil} = call("get", "exd/city", %{"id" => id})
 
     # tags
     assert {:ok, %{"id" => id}} = call("post", "exd/city", %{"name" => "TestCity_Tags1"})
@@ -123,7 +123,7 @@ defmodule ExdHelloTest do
     [city1] = cities_with_tags
     assert "TestCity_Tags1" = city1["name"]
     {:ok, city2_after_tag_remove} = call("get", "exd/city", %{"name" => "TestCity_Tags2"})
-    assert null = city2_after_tag_remove["country"]
+    assert nil == city2_after_tag_remove["country"]
     assert "TestCity_Tags2" = city2_after_tag_remove["name"]
 
     assert {:ok, %{"id" => _}} = call("post", "city", %{"name" => "Magdeburg"})

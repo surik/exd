@@ -16,7 +16,7 @@ defmodule Exd.Api.Tag do
         @name "Example"
         @tech_name "example"
         use Exd.Api, repo: Example.Repo, apis: [Exd.Api.Tag]
-      end
+        end
   """
 
   @name "Tag"
@@ -35,6 +35,7 @@ defmodule Exd.Api.Tag do
   def get(repo, params) do
     {tagname, tagvalue, model, _params} = get_data_for_tag(params)
     Ecto.Taggable.Api.search_tag(repo, model, tagname, tagvalue)
+    |> Exd.Api.Crud.export_data()
   end
 
   def delete(repo, params) do

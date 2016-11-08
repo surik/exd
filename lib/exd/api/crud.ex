@@ -69,12 +69,16 @@ defmodule Exd.Api.Crud do
 
   """
   def get(api, params) do
+    IO.puts "crud get"
     keys = Map.keys(params)
     if ("id" in keys) or ("name" in keys) do
       get_one(api, params)
     else
       select(api, params)
-    end |> format_data(api, params, as: :get)
+    end 
+    |> IO.inspect
+    |> format_data(api, params, as: :get)
+    |> IO.inspect
   end
 
   defp get_one(api, %{"id" => id} = params) do
@@ -241,10 +245,10 @@ defmodule Exd.Api.Crud do
     end
   end
 
-  defp export_data(nil, _opts), do: nil
-  defp export_data(data, opts \\ [as: :get])
-  defp export_data(data, opts) when is_list(data), do: Enum.map(data, &export_data(&1, opts))
-  defp export_data(data, opts) do
+  def export_data(nil, _opts), do: nil
+  def export_data(data, opts \\ [as: :get])
+  def export_data(data, opts) when is_list(data), do: Enum.map(data, &export_data(&1, opts))
+  def export_data(data, opts) do
     case opts[:as] do
       :get ->
         Map.drop(data, [:__meta__, :__struct__]) |> Enum.filter_map(&filter_assocs/1, &transform/1) |> Enum.into(%{})
